@@ -1,85 +1,103 @@
--- RECORD guarda un VARRAY con hasta 3 métodos de pago en cado de ser usado, 
--- El VARRAY tiene sentido cuando quieres guardar varios valores para un mismo campo
+/* RECORD guarda un VARRAY con hasta 3 métodos de pago en cado de ser usado, 
+ El VARRAY tiene sentido cuando quieres guardar varios valores para un mismo campo ,
+
+Bucle anidado:
+El cursor padre recorre clientes.
+Por cada cliente, el cursor hijo recorre sus pagos.
+
+Top1 método de pago: se calcula solo si el cliente tiene pagos, evitando errores y simplificando la lógica.
+ */
+
+SET SERVEROUTPUT ON SIZE 1000000;
 
 DECLARE
-    -- VARRAY para hasta 3 formas de pago más usadas
-    TYPE formas_pago_array IS VARRAY(3) OF VARCHAR2(50);
+    -- VARRAY para almacenar el método de pago más usado (solo 1)
+    TYPE formas_pago_array IS VARRAY(1) OF VARCHAR2(50);
 
-    -- RECORD para los datos del cliente
+    -- RECORD para guardar datos del cliente
     TYPE cliente_rec_type IS RECORD (
-        RUT_CLIENTE         VARCHAR2(20),
-        NOMBRE_CLIENTE      VARCHAR2(100),
-        FECHA_NAC_CLIENTE   VARCHAR2(40),
-        FECHA_INS_CLIENTE   VARCHAR2(40),
-        CORREO_CLIENTE      VARCHAR2(100),
-        FONO_CLIENTE        VARCHAR2(20),
-        FORMAS_PAGO_TOP     formas_pago_array,
-        CANT_PAGOS          NUMBER,
-        ULTIMO_PAGO         DATE
+        RUT_CLIENTE       VARCHAR2(20),
+        NOMBRE_CLIENTE    VARCHAR2(100),
+        FECHA_NAC_CLIENTE DATE,
+        FECHA_INS_CLIENTE DATE,
+        CORREO_CLIENTE    VARCHAR2(100),
+        FONO_CLIENTE      VARCHAR2(20),
+        FORMAS_PAGO_TOP1  formas_pago_array,
+        CANT_PAGOS        NUMBER,
+        ULTIMO_PAGO       DATE
     );
 
     cliente_rec cliente_rec_type;
 
-    CURSOR cliente_cur IS
-        SELECT
-            TO_CHAR(CLI.NUMRUN, '09G999G999') || '-' || UPPER(DVRUN) AS RUT_CLIENTE,
-            INITCAP(PNOMBRE || ' ' || SNOMBRE || ' ' || APPATERNO || ' ' || APMATERNO) AS NOMBRE_CLIENTE,
-            TO_CHAR(FECHA_NACIMIENTO, 'DD "de" Month "de" YYYY', 'NLS_DATE_LANGUAGE=SPANISH') AS FECHA_NAC_CLIENTE,
-            TO_CHAR(FECHA_INSCRIPCION, 'DD "de" Month "de" YYYY', 'NLS_DATE_LANGUAGE=SPANISH') AS FECHA_INS_CLIENTE,
-            NVL(CORREO, 'Sin Correo') AS CORREO_CLIENTE,
-            NVL(TO_CHAR(FONO_CONTACTO), 'Sin Fono Contacto') AS FONO_CLIENTE,
-            COUNT(*) AS CANT_PAGOS,
-            MAX(PAGCLI.FECHA_PAGO) AS ULTIMO_PAGO,
-            CLI.NUMRUN
-        FROM CLIENTE CLI
-        LEFT JOIN TARJETA_CLIENTE TARCLI ON CLI.NUMRUN = TARCLI.NUMRUN
-        LEFT JOIN PAGO_MENSUAL_TARJETA_CLIENTE PAGCLI ON TARCLI.NRO_TARJETA = PAGCLI.NRO_TARJETA
-        LEFT JOIN FORMA_PAGO FORPAG ON PAGCLI.COD_FORMA_PAGO = FORPAG.COD_FORMA_PAGO
-        GROUP BY
-            CLI.NUMRUN, DVRUN, PNOMBRE, SNOMBRE, APPATERNO, APMATERNO, FECHA_NACIMIENTO,
-            FECHA_INSCRIPCION, CORREO, FONO_CONTACTO;
+    -- Cursor padre: todos los clientes
+    CURSOR c_clientes IS
+        SELECT NUMRUN, PNOMBRE || ' ' || APPATERNO AS NOMBRE, FECHA_NACIMIENTO, FECHA_INSCRIPCION, CORREO, FONO_CONTACTO
+        FROM CLIENTE;
+
+    -- Cursor hijo: pagos por cliente (recibe NUMRUN)
+    CURSOR c_pagos (p_numrun CLIENTE.NUMRUN%TYPE) IS
+        SELECT F.NOMBRE_FORMA_PAGO, P.FECHA_PAGO
+        FROM TARJETA_CLIENTE T
+        JOIN PAGO_MENSUAL_TARJETA_CLIENTE P ON T.NRO_TARJETA = P.NRO_TARJETA
+        JOIN FORMA_PAGO F ON P.COD_FORMA_PAGO = F.COD_FORMA_PAGO
+        WHERE T.NUMRUN = p_numrun;
+
+    v_top1_pago VARCHAR2(50);
+    v_cant_pagos NUMBER;
+    v_ultimo_pago DATE;
 
 BEGIN
-    FOR cliente IN cliente_cur LOOP
-        -- Inicializamos el VARRAY vacío
-        cliente_rec.FORMAS_PAGO_TOP := formas_pago_array();
+    FOR reg_cli IN c_clientes LOOP
+        v_cant_pagos := 0;
+        v_ultimo_pago := NULL;
+        v_top1_pago := 'Sin Datos';
 
-        -- Cargamos los 3 métodos de pago más usados
-        SELECT NOMBRE_FORMA_PAGO
-        BULK COLLECT INTO cliente_rec.FORMAS_PAGO_TOP
-        FROM (
-            SELECT F.NOMBRE_FORMA_PAGO, COUNT(*) AS uso
-            FROM CLIENTE C
-            INNER JOIN TARJETA_CLIENTE T ON C.NUMRUN = T.NUMRUN
-            INNER JOIN PAGO_MENSUAL_TARJETA_CLIENTE P ON T.NRO_TARJETA = P.NRO_TARJETA
-            INNER JOIN FORMA_PAGO F ON P.COD_FORMA_PAGO = F.COD_FORMA_PAGO
-            WHERE C.NUMRUN = cliente.NUMRUN
-            GROUP BY F.NOMBRE_FORMA_PAGO
-            ORDER BY uso DESC
-        )
-        WHERE ROWNUM <= 3;
+        -- Recorremos los pagos del cliente
+        FOR reg_pag IN c_pagos(reg_cli.NUMRUN) LOOP
+            v_cant_pagos := v_cant_pagos + 1;
+            IF v_ultimo_pago IS NULL OR reg_pag.FECHA_PAGO > v_ultimo_pago THEN
+                v_ultimo_pago := reg_pag.FECHA_PAGO;
+            END IF;
+        END LOOP;
 
-        -- Asignamos los demás datos
-        cliente_rec.RUT_CLIENTE := cliente.RUT_CLIENTE;
-        cliente_rec.NOMBRE_CLIENTE := cliente.NOMBRE_CLIENTE;
-        cliente_rec.FECHA_NAC_CLIENTE := cliente.FECHA_NAC_CLIENTE;
-        cliente_rec.FECHA_INS_CLIENTE := cliente.FECHA_INS_CLIENTE;
-        cliente_rec.CORREO_CLIENTE := cliente.CORREO_CLIENTE;
-        cliente_rec.FONO_CLIENTE := cliente.FONO_CLIENTE;
-        cliente_rec.CANT_PAGOS := cliente.CANT_PAGOS;
-        cliente_rec.ULTIMO_PAGO := cliente.ULTIMO_PAGO;
+        -- Solo procesar si tiene pagos
+        IF v_cant_pagos > 0 THEN
+            -- Obtener método de pago más usado
+            SELECT NOMBRE_FORMA_PAGO
+            INTO v_top1_pago
+            FROM (
+                SELECT F.NOMBRE_FORMA_PAGO, COUNT(*) AS USO
+                FROM TARJETA_CLIENTE T
+                JOIN PAGO_MENSUAL_TARJETA_CLIENTE P ON T.NRO_TARJETA = P.NRO_TARJETA
+                JOIN FORMA_PAGO F ON P.COD_FORMA_PAGO = F.COD_FORMA_PAGO
+                WHERE T.NUMRUN = reg_cli.NUMRUN
+                GROUP BY F.NOMBRE_FORMA_PAGO
+                ORDER BY USO DESC
+            )
+            WHERE ROWNUM = 1;
 
-        -- Imprimir resultados
-        DBMS_OUTPUT.PUT_LINE('RUT: ' || cliente_rec.RUT_CLIENTE);
-        DBMS_OUTPUT.PUT_LINE('Nombre: ' || cliente_rec.NOMBRE_CLIENTE);
-        DBMS_OUTPUT.PUT_LINE('Métodos de pago más usados:');
-        IF cliente_rec.FORMAS_PAGO_TOP.COUNT > 0 THEN
-            FOR i IN 1 .. cliente_rec.FORMAS_PAGO_TOP.COUNT LOOP
-                DBMS_OUTPUT.PUT_LINE('   - ' || cliente_rec.FORMAS_PAGO_TOP(i));
-            END LOOP;
-        ELSE
-            DBMS_OUTPUT.PUT_LINE('   - Sin Datos');
+            -- Llenamos el RECORD
+            cliente_rec.RUT_CLIENTE := TO_CHAR(reg_cli.NUMRUN);
+            cliente_rec.NOMBRE_CLIENTE := reg_cli.NOMBRE;
+            cliente_rec.FECHA_NAC_CLIENTE := reg_cli.FECHA_NACIMIENTO;
+            cliente_rec.FECHA_INS_CLIENTE := reg_cli.FECHA_INSCRIPCION;
+            cliente_rec.CORREO_CLIENTE := reg_cli.CORREO;
+            cliente_rec.FONO_CLIENTE := reg_cli.FONO_CONTACTO;
+            cliente_rec.CANT_PAGOS := v_cant_pagos;
+            cliente_rec.ULTIMO_PAGO := v_ultimo_pago;
+
+            -- Inicializamos el VARRAY y guardamos el top1
+            cliente_rec.FORMAS_PAGO_TOP1 := formas_pago_array();
+            cliente_rec.FORMAS_PAGO_TOP1.EXTEND;
+            cliente_rec.FORMAS_PAGO_TOP1(1) := v_top1_pago;
+
+            -- Imprimir resultados
+            DBMS_OUTPUT.PUT_LINE('RUT: ' || cliente_rec.RUT_CLIENTE);
+            DBMS_OUTPUT.PUT_LINE('Nombre: ' || cliente_rec.NOMBRE_CLIENTE);
+            DBMS_OUTPUT.PUT_LINE('Cantidad de pagos: ' || cliente_rec.CANT_PAGOS);
+            DBMS_OUTPUT.PUT_LINE('Último pago: ' || TO_CHAR(cliente_rec.ULTIMO_PAGO,'DD/MM/YYYY'));
+            DBMS_OUTPUT.PUT_LINE('Método de pago más usado: ' || cliente_rec.FORMAS_PAGO_TOP1(1));
+            DBMS_OUTPUT.PUT_LINE('-----------------------------------------');
         END IF;
-        DBMS_OUTPUT.PUT_LINE('------------------------------------');
     END LOOP;
 END;

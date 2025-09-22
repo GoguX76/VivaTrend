@@ -1,27 +1,3 @@
-/*
-=============================================================================
-TRIGGER: TRG_ACTUALIZAR_CUPOS_PAGO
-=============================================================================
-
-PROPÓSITO:
-Este trigger se ejecuta automáticamente cada vez que se registra un nuevo pago
-en la tabla PAGO_MENSUAL_TARJETA_CLIENTE. Su función es actualizar los cupos
-disponibles de la tarjeta, aumentándolos según el monto pagado.
-
-LÓGICA DE NEGOCIO:
-- Cuando un cliente paga, recupera capacidad de compra en su tarjeta
-- El 70% del pago se suma al cupo disponible de compras
-- El 30% del pago se suma al cupo disponible de super avance
-- Esto simula una distribución realista de cómo se recuperan los cupos
-
-MOMENTO DE EJECUCIÓN:
-- AFTER INSERT: Después de que se inserte un registro en PAGO_MENSUAL_TARJETA_CLIENTE
-- FOR EACH ROW: Se ejecuta una vez por cada fila insertada
-
-VARIABLES ESPECIALES:
-- :NEW hace referencia a los datos del registro que se acaba de insertar
-*/
-
 CREATE OR REPLACE TRIGGER TRG_ACTUALIZAR_CUPOS_PAGO
     AFTER INSERT ON PAGO_MENSUAL_TARJETA_CLIENTE
     FOR EACH ROW
@@ -111,30 +87,3 @@ EXCEPTION
         
 END TRG_ACTUALIZAR_CUPOS_PAGO;
 /
-
-/*
-=============================================================================
-COMENTARIOS ADICIONALES SOBRE EL TRIGGER:
-=============================================================================
-
-1. ¿CUÁNDO SE EJECUTA?
-   - Automáticamente cada vez que se ejecuta tu procedimiento registrar_pago()
-   - También si alguien hace INSERT directo en PAGO_MENSUAL_TARJETA_CLIENTE
-
-2. ¿POR QUÉ ES ÚTIL?
-   - Mantiene actualizada la capacidad de crédito automáticamente
-   - Evita tener que recordar actualizar los cupos manualmente
-   - Reduce errores humanos en el cálculo
-
-3. ¿QUÉ PASA SI HAY ERRORES?
-   - El trigger detiene toda la transacción (ROLLBACK automático)
-   - Esto garantiza consistencia: o se registra el pago Y se actualizan los cupos, o no pasa nada
-
-4. PERSONALIZACIÓN:
-   - Puedes cambiar los porcentajes (70% / 30%) según tu lógica de negocio
-   - Puedes agregar más validaciones o cálculos según necesites
-
-5. TESTING:
-   - Para probar: ejecuta tu procedimiento registrar_pago()
-   - Verifica que los cupos se actualicen correctamente en TARJETA_CLIENTE
-*/

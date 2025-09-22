@@ -1,12 +1,12 @@
--- Con esto el mes se muestra en español
--- (Si se ejecuta en SQL Developer ya se muestra por default en español)
+-- Configuración de sesión
 ALTER SESSION SET NLS_DATE_LANGUAGE = 'SPANISH';
 
+-- Consulta simplificada de clientes y pagos
 SELECT DISTINCT
     TO_CHAR(CLI.NUMRUN, '09G999G999') || '-' || UPPER(DVRUN) as RUT_CLIENTE,
     INITCAP(PNOMBRE || ' ' || SNOMBRE || ' ' || APPATERNO || ' ' || APMATERNO) AS NOMBRE_CLIENTE,
     TO_CHAR(FECHA_NACIMIENTO, 'DD "de" Month "de" YYYY') as FECHA_NAC_CLIENTE,
-    TO_CHAR(FECHA_INSCRIPCION, 'DD "de" Month "de" YYYY') as  FECHA_INS_CLIENTE,
+    TO_CHAR(FECHA_INSCRIPCION, 'DD "de" Month "de" YYYY') as FECHA_INS_CLIENTE,
     NVL(CORREO, 'Sin Correo') as CORREO_CLIENTE,
     NVL(TO_CHAR(FONO_CONTACTO), 'Sin Fono Contacto') as FONO_CLIENTE,
     NOMBRE_FORMA_PAGO AS FORMA_PAGO_CLI,

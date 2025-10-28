@@ -1,16 +1,15 @@
 /*******************************************************************************
  * PROCEDIMIENTO: generar_reporte_mensual
- * 
- * DESCRIPCIÓN:
+ * * DESCRIPCIÓN:
  * Genera un reporte mensual con todos los pagos del mes actual,
  * mostrando información detallada por cliente y tarjeta.
  ******************************************************************************/
 
 CREATE OR REPLACE PROCEDURE generar_reporte_mensual AS
-    v_mes_actual VARCHAR2(6);
+
     v_total_pagos NUMBER := 0;
     v_monto_total NUMBER := 0;
-    v_promedio NUMBER := 0;
+    v_promedio    NUMBER := 0;
     
     CURSOR c_pagos_mes IS
         SELECT 
@@ -20,16 +19,18 @@ CREATE OR REPLACE PROCEDURE generar_reporte_mensual AS
             SUM(pmt.MONTO_PAGADO) as total_pagado
         FROM TARJETA_CLIENTE tc
         JOIN PAGO_MENSUAL_TARJETA_CLIENTE pmt ON tc.NRO_TARJETA = pmt.NRO_TARJETA
-        WHERE pmt.ANNO_MES_PAGO = TO_CHAR(SYSDATE, 'YYYYMM')
+
+        WHERE pmt.ANNO_MES_PAGO = TO_CHAR(SYSDATE, 'YYYYMM') 
         GROUP BY tc.NUMRUN, tc.NRO_TARJETA
         ORDER BY total_pagado DESC;
 BEGIN
     DBMS_OUTPUT.PUT_LINE('=== GENERANDO REPORTE MENSUAL ===');
-    v_mes_actual := TO_CHAR(SYSDATE, 'YYYYMM');
+
     
     DBMS_OUTPUT.PUT_LINE('========================================');
-    DBMS_OUTPUT.PUT_LINE('  REPORTE MENSUAL DE PAGOS VIVATREND');
-    DBMS_OUTPUT.PUT_LINE('  Período: ' || TO_CHAR(SYSDATE, 'MONTH YYYY'));
+    DBMS_OUTPUT.PUT_LINE('   REPORTE MENSUAL DE PAGOS VIVATREND');
+
+    DBMS_OUTPUT.PUT_LINE('   Período: ' || TO_CHAR(SYSDATE, 'FMMonth YYYY', 'NLS_DATE_LANGUAGE=Spanish'));
     DBMS_OUTPUT.PUT_LINE('========================================');
     DBMS_OUTPUT.PUT_LINE('');
     
@@ -40,19 +41,29 @@ BEGIN
         DBMS_OUTPUT.PUT_LINE('Cliente: ' || reg.NUMRUN || 
                            ' | Tarjeta: ' || reg.NRO_TARJETA ||
                            ' | Pagos: ' || reg.cantidad_pagos ||
-                           ' | Total: $' || TO_CHAR(reg.total_pagado, '999,999,999'));
+  
+                           ' | Total: $' || TO_CHAR(reg.total_pagado, 'FM999,999,999'));
     END LOOP;
     
+    DBMS_OUTPUT.PUT_LINE('');
+    
+
+    IF v_total_pagos = 0 THEN
+         DBMS_OUTPUT.PUT_LINE('*** No se encontraron pagos para el período actual. ***');
+         DBMS_OUTPUT.PUT_LINE('');
+    END IF;
+   
+
     IF v_total_pagos > 0 THEN
         v_promedio := v_monto_total / v_total_pagos;
     END IF;
     
-    DBMS_OUTPUT.PUT_LINE('');
     DBMS_OUTPUT.PUT_LINE('========================================');
     DBMS_OUTPUT.PUT_LINE('TOTALES:');
-    DBMS_OUTPUT.PUT_LINE('  Total de pagos: ' || v_total_pagos);
-    DBMS_OUTPUT.PUT_LINE('  Monto total: $' || TO_CHAR(v_monto_total, '999,999,999'));
-    DBMS_OUTPUT.PUT_LINE('  Promedio: $' || TO_CHAR(v_promedio, '999,999,999'));
+    DBMS_OUTPUT.PUT_LINE('   Total de pagos: ' || v_total_pagos);
+
+    DBMS_OUTPUT.PUT_LINE('   Monto total: $' || TO_CHAR(v_monto_total, 'FM999,999,999'));
+    DBMS_OUTPUT.PUT_LINE('   Promedio: $' || TO_CHAR(v_promedio, 'FM999,999,999'));
     DBMS_OUTPUT.PUT_LINE('========================================');
     
     DBMS_OUTPUT.PUT_LINE('Reporte generado exitosamente');

@@ -12,7 +12,7 @@
  ******************************************************************************/
 
 CREATE OR REPLACE FUNCTION obtener_total_clientes
-RETURN NUMBER AS
+RETURN NUMBER IS
     v_total NUMBER := 0;
 BEGIN
     SELECT COUNT(DISTINCT tc.NUMRUN)

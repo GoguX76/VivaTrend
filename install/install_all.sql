@@ -76,8 +76,8 @@ PROMPT ========================================
 PROMPT
 PROMPT - Trigger TRG_ACTUALIZAR_CUPOS_PAGO (actualiza cupos después de pago)...
 @@../triggers/trg_actualizar_cupos_pago.sql
--- PROMPT - Trigger TRG_AUDITAR_CAMBIOS_CUPOS (audita cambios en límites)...
--- @@../triggers/trg_auditar_cambios_cupos.sql
+PROMPT - Trigger TRG_AUDITAR_CAMBIOS_CUPOS (audita cambios en límites)...
+@@../triggers/trg_auditar_cambios_cupos.sql
 PROMPT ✓ Triggers creados exitosamente
 PROMPT
 
@@ -104,8 +104,8 @@ WHERE object_name IN (
     'OBTENER_TOTAL_CLIENTES',
     'GENERAR_REPORTE_MENSUAL',
     'OBTENER_RESUMEN_CLIENTE',
-    'TRG_ACTUALIZAR_CUPOS_PAGO'
-    -- 'TRG_AUDITAR_CAMBIOS_CUPOS' -- Comentado: trigger opcional
+    'TRG_ACTUALIZAR_CUPOS_PAGO',
+    'TRG_AUDITAR_CAMBIOS_CUPOS'
 )
 ORDER BY 
     CASE object_type
@@ -128,9 +128,9 @@ PROMPT   • 2 Secuencias
 PROMPT   • 1 Package (con 4 tipos de datos)
 PROMPT   • 2 Funciones
 PROMPT   • 2 Procedimientos
-PROMPT   • 1 Trigger
+PROMPT   • 2 Trigger
 PROMPT
-PROMPT Total: 8 objetos SQL
+PROMPT Total: 9 objetos SQL
 PROMPT
 PROMPT ========================================
 PROMPT   FIN DE LA INSTALACIÓN

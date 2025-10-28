@@ -1,7 +1,6 @@
 /*******************************************************************************
  * FUNCIÓN: calcular_estadisticas_periodo
- * 
- * DESCRIPCIÓN:
+ * * DESCRIPCIÓN:
  * Calcula estadísticas agregadas de pagos para un período específico.
  * Retorna un registro con totales, promedios y valores extremos.
  ******************************************************************************/
@@ -9,7 +8,7 @@
 CREATE OR REPLACE FUNCTION calcular_estadisticas_periodo(
     p_fecha_inicio IN DATE,
     p_fecha_fin IN DATE
-) RETURN PKG_VIVATREND_TARJETAS.t_estadisticas_pago AS
+) RETURN PKG_VIVATREND_TARJETAS.t_estadisticas_pago IS
     v_stats PKG_VIVATREND_TARJETAS.t_estadisticas_pago;
 BEGIN
     DBMS_OUTPUT.PUT_LINE('Calculando estadísticas para período...');
@@ -20,8 +19,9 @@ BEGIN
         NVL(AVG(MONTO_PAGADO), 0),
         NVL(MAX(MONTO_PAGADO), 0),
         NVL(MIN(MONTO_PAGADO), 0),
-        MIN(FECHA_PAGO),
-        MAX(FECHA_PAGO)
+        -- Si no hay pagos, usa las fechas de entrada como período
+        NVL(MIN(FECHA_PAGO), p_fecha_inicio), 
+        NVL(MAX(FECHA_PAGO), p_fecha_fin)
     INTO
         v_stats.total_pagos,
         v_stats.monto_total,
@@ -38,12 +38,7 @@ BEGIN
     RETURN v_stats;
     
 EXCEPTION
-    WHEN NO_DATA_FOUND THEN
-        v_stats.total_pagos := 0;
-        v_stats.monto_total := 0;
-        v_stats.periodo_inicio := p_fecha_inicio;
-        v_stats.periodo_fin := p_fecha_fin;
-        RETURN v_stats;
+
     WHEN OTHERS THEN
         DBMS_OUTPUT.PUT_LINE('Error calculando estadísticas: ' || SQLERRM);
         RAISE;

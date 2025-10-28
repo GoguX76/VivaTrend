@@ -1,7 +1,37 @@
--- Package para manejar tarjetas y pagos VivaTrend
+/*******************************************************************************
+ * PACKAGE: PKG_VIVATREND_TARJETAS
+ * 
+ * CONTEXTO DE NEGOCIO:
+ * --------------------
+ * VivaTrend es una empresa retail que ofrece tarjetas de crédito a sus clientes
+ * para facilitar sus compras. El sistema gestiona:
+ * 
+ * 1. TARJETAS DE CRÉDITO: Cada cliente puede tener una tarjeta con dos tipos de cupos:
+ *    - Cupo de Compra: Para realizar compras en tiendas
+ *    - Cupo de Super Avance: Para retiros de efectivo
+ * 
+ * 2. PAGOS MENSUALES: Los clientes realizan pagos que incrementan sus cupos disponibles
+ *    según una distribución: 70% para compras y 30% para avances
+ * 
+ * 3. MÉTODOS DE PAGO: Los pagos pueden realizarse mediante:
+ *    - Efectivo
+ *    - Cheque
+ *    - Transferencia bancaria
+ * 
+ * Este package contiene solo tipos de datos y constantes.
+ * Las funciones y procedimientos están en archivos separados por modularidad.
+ * 
+ * VERSIÓN: 3.0 - Refactorizado para eliminar funciones y procedimientos no esenciales
+ * FECHA: Octubre 2025
+ ******************************************************************************/
+
 CREATE OR REPLACE PACKAGE PKG_VIVATREND_TARJETAS AS
 
-    -- Tipo para información de cliente
+    /***************************************************************************
+     * TIPOS DE DATOS
+     ***************************************************************************/
+    
+    -- Tipo para resumen de cliente
     TYPE t_cliente_resumen IS RECORD(
         rut_cliente NUMBER,
         nombre_completo VARCHAR2(200),
@@ -21,83 +51,56 @@ CREATE OR REPLACE PACKAGE PKG_VIVATREND_TARJETAS AS
         cupo_max_avance NUMBER(12,2),
         cupo_disp_avance NUMBER(12,2),
         porcentaje_uso_compra NUMBER(5,2),
-        porcentaje_uso_avance NUMBER(5,2)
+        porcentaje_uso_avance NUMBER(5,2),
+        estado VARCHAR2(50)
     );
-
-    -- Tablas para múltiples resultados (para PIPELINED debe ser sin INDEX BY)
+    
+    -- Colección para múltiples clientes (PIPELINED)
     TYPE t_tabla_clientes IS TABLE OF t_cliente_resumen;
 
-    -- Constantes
+    -- Tipo para estadísticas de pagos
+    TYPE t_estadisticas_pago IS RECORD (
+        total_pagos NUMBER,
+        monto_total NUMBER(12,2),
+        monto_promedio NUMBER(12,2),
+        monto_maximo NUMBER(12,2),
+        monto_minimo NUMBER(12,2),
+        periodo_inicio DATE,
+        periodo_fin DATE
+    );
+
+    /***************************************************************************
+     * CONSTANTES
+     ***************************************************************************/
+    
+    -- Códigos de formas de pago
     C_PAGO_EFECTIVO CONSTANT NUMBER := 1;
     C_PAGO_CHEQUE CONSTANT NUMBER := 2;
     C_PAGO_TRANSFERENCIA CONSTANT NUMBER := 3;
+    
+    -- Cupos por defecto
     C_CUPO_DEFAULT_COMPRA CONSTANT NUMBER := 1000000;
     C_CUPO_DEFAULT_AVANCE CONSTANT NUMBER := 500000;
-
-    -- PROCEDIMIENTOS
     
-    -- Registra un pago (versión mejorada)
-    PROCEDURE registrar_pago_mejorado(
-        p_rut_cliente IN NUMBER,
-        p_nro_tarjeta IN OUT NUMBER,
-        p_cod_forma_pago IN OUT NUMBER,
-        p_monto IN NUMBER,
-        p_fecha_pago IN DATE,
-        p_resultado OUT VARCHAR2
-    );
+    -- Porcentajes de distribución
+    C_PORCENTAJE_COMPRA CONSTANT NUMBER := 0.70;
+    C_PORCENTAJE_AVANCE CONSTANT NUMBER := 0.30;
     
-    -- Obtiene resumen completo de un cliente
-    PROCEDURE obtener_resumen_cliente(
-        p_rut_cliente IN NUMBER,
-        p_info_cliente OUT t_cliente_resumen
-    );
-
-    -- FUNCIONES
+    -- Límites de montos
+    C_MONTO_MINIMO_PAGO CONSTANT NUMBER := 1000;
+    C_MONTO_MAXIMO_PAGO CONSTANT NUMBER := 999999999;
     
-    -- Calcula cupo total disponible de una tarjeta
-    FUNCTION calcular_cupo_total_disponible(
-        p_nro_tarjeta IN NUMBER
-    ) RETURN NUMBER;
-    
-    -- Obtiene método de pago más usado por cliente
-    FUNCTION obtener_metodo_preferido(
-        p_rut_cliente IN NUMBER
-    ) RETURN VARCHAR2;
-    
-    -- Valida si un monto es válido para pago
-    FUNCTION validar_monto_pago(
-        p_monto IN NUMBER
-    ) RETURN BOOLEAN;
-    
-    -- Obtiene información detallada de cupos
-    FUNCTION obtener_info_cupos(
-        p_nro_tarjeta IN NUMBER
-    ) RETURN t_info_cupos;
-    
-    -- Calcula promedio de pagos de un cliente
-    FUNCTION calcular_promedio_pagos(
-        p_rut_cliente IN NUMBER
-    ) RETURN NUMBER;
-    
-    -- Obtiene descripción de forma de pago
-    FUNCTION obtener_desc_forma_pago(
-        p_cod_forma_pago IN NUMBER
-    ) RETURN VARCHAR2;
-    
-    -- Verifica si existe una tarjeta
-    FUNCTION existe_tarjeta(
-        p_nro_tarjeta IN NUMBER
-    ) RETURN BOOLEAN;
-    
-    -- Obtiene todos los clientes con resumen
-    FUNCTION obtener_todos_clientes_resumen
-    RETURN t_tabla_clientes PIPELINED;
-    
-    -- Cuenta pagos en un período
-    FUNCTION contar_pagos_periodo(
-        p_fecha_inicio IN DATE,
-        p_fecha_fin IN DATE
-    ) RETURN NUMBER;
+    -- Meses de vencimiento
+    C_MESES_VENCIMIENTO CONSTANT NUMBER := 5;
 
 END PKG_VIVATREND_TARJETAS;
 /
+
+SHOW ERRORS;
+
+/*******************************************************************************
+ * NOTA: Este package no requiere un PACKAGE BODY porque solo contiene
+ * definiciones de tipos y constantes. Todos los procedimientos y funciones
+ * han sido movidos a archivos independientes en las carpetas 
+ * /procedures y /functions para mejor modularidad.
+ ******************************************************************************/

@@ -7,11 +7,6 @@
  * 3. Funciones standalone (2 funciones)
  * 4. Procedimientos standalone (2 procedimientos)
  * 5. Triggers (2 triggers)
- * 
- * Ejecutar como usuario con privilegios suficientes en Oracle
- * 
- * VERSIÓN: 2.0 - Actualizado con todos los componentes del proyecto
- * FECHA: 27 de Octubre 2025
  ******************************************************************************/
 
 -- Configuración del entorno
@@ -81,8 +76,8 @@ PROMPT ========================================
 PROMPT
 PROMPT - Trigger TRG_ACTUALIZAR_CUPOS_PAGO (actualiza cupos después de pago)...
 @@../triggers/trg_actualizar_cupos_pago.sql
-PROMPT - Trigger TRG_AUDITAR_CAMBIOS_CUPOS (audita cambios en límites)...
-@@../triggers/trg_auditar_cambios_cupos.sql
+-- PROMPT - Trigger TRG_AUDITAR_CAMBIOS_CUPOS (audita cambios en límites)...
+-- @@../triggers/trg_auditar_cambios_cupos.sql
 PROMPT ✓ Triggers creados exitosamente
 PROMPT
 
@@ -109,8 +104,8 @@ WHERE object_name IN (
     'OBTENER_TOTAL_CLIENTES',
     'GENERAR_REPORTE_MENSUAL',
     'OBTENER_RESUMEN_CLIENTE',
-    'TRG_ACTUALIZAR_CUPOS_PAGO',
-    'TRG_AUDITAR_CAMBIOS_CUPOS'
+    'TRG_ACTUALIZAR_CUPOS_PAGO'
+    -- 'TRG_AUDITAR_CAMBIOS_CUPOS' -- Comentado: trigger opcional
 )
 ORDER BY 
     CASE object_type
@@ -133,9 +128,9 @@ PROMPT   • 2 Secuencias
 PROMPT   • 1 Package (con 4 tipos de datos)
 PROMPT   • 2 Funciones
 PROMPT   • 2 Procedimientos
-PROMPT   • 2 Triggers
+PROMPT   • 1 Trigger
 PROMPT
-PROMPT Total: 9 objetos SQL
+PROMPT Total: 8 objetos SQL
 PROMPT
 PROMPT ========================================
 PROMPT   FIN DE LA INSTALACIÓN

@@ -4,9 +4,6 @@
  * DESCRIPCIÓN:
  * Genera un reporte mensual con todos los pagos del mes actual,
  * mostrando información detallada por cliente y tarjeta.
- * 
- * VERSIÓN: 1.0 - Procedimiento standalone
- * FECHA: Octubre 2025
  ******************************************************************************/
 
 CREATE OR REPLACE PROCEDURE generar_reporte_mensual AS

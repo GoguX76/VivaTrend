@@ -4,15 +4,6 @@
  * DESCRIPCIÓN:
  * Calcula estadísticas agregadas de pagos para un período específico.
  * Retorna un registro con totales, promedios y valores extremos.
- * 
- * PARÁMETROS:
- * - p_fecha_inicio (IN): Fecha de inicio del período
- * - p_fecha_fin (IN): Fecha de fin del período
- * 
- * RETORNA: t_estadisticas_pago con las estadísticas calculadas
- * 
- * VERSIÓN: 1.0 - Función standalone
- * FECHA: Octubre 2025
  ******************************************************************************/
 
 CREATE OR REPLACE FUNCTION calcular_estadisticas_periodo(

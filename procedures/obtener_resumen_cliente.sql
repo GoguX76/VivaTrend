@@ -4,13 +4,6 @@
  * DESCRIPCIÓN:
  * Obtiene un resumen completo de la información de un cliente específico,
  * incluyendo sus datos personales, tarjeta y estadísticas de pagos.
- * 
- * PARÁMETROS:
- * - p_rut_cliente (IN): RUT del cliente a consultar
- * - p_info_cliente (OUT): Registro con toda la información del cliente
- * 
- * VERSIÓN: 1.0 - Procedimiento standalone
- * FECHA: Octubre 2025
  ******************************************************************************/
 
 CREATE OR REPLACE PROCEDURE obtener_resumen_cliente(
@@ -22,7 +15,7 @@ BEGIN
     
     SELECT 
         p_rut_cliente,
-        (SELECT NOMBRE || ' ' || APELLIDO_PAT || ' ' || APELLIDO_MAT 
+        (SELECT PNOMBRE || ' ' || SNOMBRE || ' ' || APPATERNO || ' ' || APMATERNO 
          FROM CLIENTE WHERE NUMRUN = p_rut_cliente),
         tc.NRO_TARJETA,
         COUNT(pmt.NRO_SECUENCIA_PAGO),

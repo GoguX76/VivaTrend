@@ -1,28 +1,5 @@
 /*******************************************************************************
  * PACKAGE: PKG_VIVATREND_TARJETAS
- * 
- * CONTEXTO DE NEGOCIO:
- * --------------------
- * VivaTrend es una empresa retail que ofrece tarjetas de crédito a sus clientes
- * para facilitar sus compras. El sistema gestiona:
- * 
- * 1. TARJETAS DE CRÉDITO: Cada cliente puede tener una tarjeta con dos tipos de cupos:
- *    - Cupo de Compra: Para realizar compras en tiendas
- *    - Cupo de Super Avance: Para retiros de efectivo
- * 
- * 2. PAGOS MENSUALES: Los clientes realizan pagos que incrementan sus cupos disponibles
- *    según una distribución: 70% para compras y 30% para avances
- * 
- * 3. MÉTODOS DE PAGO: Los pagos pueden realizarse mediante:
- *    - Efectivo
- *    - Cheque
- *    - Transferencia bancaria
- * 
- * Este package contiene solo tipos de datos y constantes.
- * Las funciones y procedimientos están en archivos separados por modularidad.
- * 
- * VERSIÓN: 3.0 - Refactorizado para eliminar funciones y procedimientos no esenciales
- * FECHA: Octubre 2025
  ******************************************************************************/
 
 CREATE OR REPLACE PACKAGE PKG_VIVATREND_TARJETAS AS
@@ -93,14 +70,85 @@ CREATE OR REPLACE PACKAGE PKG_VIVATREND_TARJETAS AS
     -- Meses de vencimiento
     C_MESES_VENCIMIENTO CONSTANT NUMBER := 5;
 
+    /***************************************************************************
+     * PROCEDIMIENTOS Y FUNCIONES PÚBLICAS
+     ***************************************************************************/
+    
+    -- Función para validar si una tarjeta está activa y tiene cupo disponible
+    FUNCTION validar_tarjeta_activa(p_nro_tarjeta IN NUMBER) RETURN BOOLEAN;
+    
+    -- Procedimiento para actualizar cupos después de un pago
+    PROCEDURE actualizar_cupos_pago(
+        p_nro_tarjeta IN NUMBER,
+        p_monto_pago IN NUMBER
+    );
+
+END PKG_VIVATREND_TARJETAS;
+/
+
+CREATE OR REPLACE PACKAGE BODY PKG_VIVATREND_TARJETAS AS
+
+    /***************************************************************************
+     * FUNCIÓN: validar_tarjeta_activa
+     * DESCRIPCIÓN: Verifica si una tarjeta está activa y tiene cupo disponible
+     ***************************************************************************/
+    FUNCTION validar_tarjeta_activa(p_nro_tarjeta IN NUMBER) RETURN BOOLEAN IS
+        v_existe NUMBER := 0;
+        v_cupo_disponible NUMBER := 0;
+    BEGIN
+        -- Verificar si la tarjeta existe y tiene cupo disponible
+        SELECT COUNT(*), NVL(MAX(CUPO_DISP_COMPRA), 0)
+        INTO v_existe, v_cupo_disponible
+        FROM TARJETA_CLIENTE
+        WHERE NRO_TARJETA = p_nro_tarjeta;
+        
+        -- Retorna TRUE si existe y tiene cupo mayor a 0
+        RETURN (v_existe > 0 AND v_cupo_disponible > 0);
+        
+    EXCEPTION
+        WHEN OTHERS THEN
+            RETURN FALSE;
+    END validar_tarjeta_activa;
+
+    /***************************************************************************
+     * PROCEDIMIENTO: actualizar_cupos_pago
+     * DESCRIPCIÓN: Actualiza los cupos disponibles después de realizar un pago
+     ***************************************************************************/
+    PROCEDURE actualizar_cupos_pago(
+        p_nro_tarjeta IN NUMBER,
+        p_monto_pago IN NUMBER
+    ) IS
+        v_cupo_actual_compra NUMBER;
+        v_cupo_actual_avance NUMBER;
+        v_monto_compra NUMBER;
+        v_monto_avance NUMBER;
+    BEGIN
+        -- Obtener cupos actuales
+        SELECT CUPO_DISP_COMPRA, CUPO_DISP_SP_AVANCE
+        INTO v_cupo_actual_compra, v_cupo_actual_avance
+        FROM TARJETA_CLIENTE
+        WHERE NRO_TARJETA = p_nro_tarjeta;
+        
+        -- Distribuir el pago entre compra y avance según porcentajes
+        v_monto_compra := p_monto_pago * C_PORCENTAJE_COMPRA;
+        v_monto_avance := p_monto_pago * C_PORCENTAJE_AVANCE;
+        
+        -- Actualizar cupos disponibles (aumentan con el pago)
+        UPDATE TARJETA_CLIENTE
+        SET CUPO_DISP_COMPRA = LEAST(CUPO_COMPRA, v_cupo_actual_compra + v_monto_compra),
+            CUPO_DISP_SP_AVANCE = LEAST(CUPO_SUPER_AVANCE, v_cupo_actual_avance + v_monto_avance)
+        WHERE NRO_TARJETA = p_nro_tarjeta;
+        
+        DBMS_OUTPUT.PUT_LINE('Cupos actualizados para tarjeta: ' || p_nro_tarjeta);
+        
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20001, 'Tarjeta no encontrada: ' || p_nro_tarjeta);
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20002, 'Error al actualizar cupos: ' || SQLERRM);
+    END actualizar_cupos_pago;
+
 END PKG_VIVATREND_TARJETAS;
 /
 
 SHOW ERRORS;
-
-/*******************************************************************************
- * NOTA: Este package no requiere un PACKAGE BODY porque solo contiene
- * definiciones de tipos y constantes. Todos los procedimientos y funciones
- * han sido movidos a archivos independientes en las carpetas 
- * /procedures y /functions para mejor modularidad.
- ******************************************************************************/

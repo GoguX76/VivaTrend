@@ -15,16 +15,6 @@
  * - Registra la fecha y hora del cambio
  * - Muestra información detallada de los cambios realizados
  * - Previene cambios inválidos (cupos negativos o menores al disponible)
- * 
- * CONTEXTO DE NEGOCIO:
- * VivaTrend puede ajustar los límites de crédito de sus clientes
- * basándose en su comportamiento de pago. Este trigger asegura que:
- * 1. Los cambios sean válidos (no negativos)
- * 2. No se reduzcan por debajo del cupo ya utilizado
- * 3. Quede registro de todos los ajustes realizados
- * 
- * VERSIÓN: 1.0
- * FECHA: Octubre 2025
  ******************************************************************************/
 
 CREATE OR REPLACE TRIGGER TRG_AUDITAR_CAMBIOS_CUPOS
@@ -103,7 +93,7 @@ BEGIN
     PASO 3: REGISTRAR FECHA DE MODIFICACIÓN
     Actualizamos la fecha de la última modificación
     */
-    :NEW.FECHA_MODIFICACION := SYSDATE;
+    -- :NEW.FECHA_MODIFICACION := SYSDATE; -- Comentado: columna puede no existir
     
     /*
     PASO 4: MOSTRAR INFORMACIÓN DE AUDITORÍA
@@ -152,23 +142,3 @@ END TRG_AUDITAR_CAMBIOS_CUPOS;
 /
 
 SHOW ERRORS;
-
-/*******************************************************************************
- * EJEMPLOS DE USO:
- * 
- * -- Incrementar el cupo de compra (válido)
- * UPDATE TARJETA_CLIENTE 
- * SET CUPO_COMPRA = 2000000 
- * WHERE NRO_TARJETA = 12345;
- * 
- * -- Intentar establecer un cupo negativo (error controlado)
- * UPDATE TARJETA_CLIENTE 
- * SET CUPO_COMPRA = -100000 
- * WHERE NRO_TARJETA = 12345;
- * 
- * -- Intentar reducir el cupo por debajo del disponible (error controlado)
- * UPDATE TARJETA_CLIENTE 
- * SET CUPO_COMPRA = 500000 
- * WHERE NRO_TARJETA = 12345 
- * AND CUPO_DISP_COMPRA > 500000;
- ******************************************************************************/

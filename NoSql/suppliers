@@ -1,0 +1,51 @@
+db.suppliers.insertMany([{
+        company_name: "Textiles Patronato SpA",
+        contact_person: "Juanito Pérez",
+        email: "ventas@textilespatronato.cl",
+        phone: "+56-2-22221111",
+        country: "Chile",
+        categories_supplied: ["Telas Nacionales", "Poleras Básicas"],
+        active_contract: true,
+        rating: 4.5
+    },
+    {
+        company_name: "Importadora Meiggs Ltda",
+        contact_person: "Roberto Diaz",
+        email: "contacto@meiggsimport.cl",
+        phone: "+56-2-33334444",
+        country: "Chile",
+        categories_supplied: ["Accesorios", "Jockeys", "Mochilas"],
+        active_contract: true,
+        rating: 4.2
+    },
+    {
+        company_name: "Zofri Fashion Imports",
+        contact_person: "Laura Chen",
+        email: "laura@zofrifashion.cl",
+        phone: "+56-57-2456789",
+        country: "Chile",
+        categories_supplied: ["Parkas", "Jeans"],
+        active_contract: true,
+        rating: 4.7
+    },
+    {
+        company_name: "Cueros del Sur",
+        contact_person: "Hans Zimmer",
+        email: "ventas@cuerosdelsur.cl",
+        phone: "+56-63-2987654",
+        country: "Chile",
+        categories_supplied: ["Zapatos", "Cuero"],
+        active_contract: true,
+        rating: 4.9
+    },
+    {
+        company_name: "Distribuidora La Polarizada",
+        contact_person: "Sofia Vergara",
+        email: "s.vergara@lapolarizada.cl",
+        phone: "+56-2-55556666",
+        country: "Chile",
+        categories_supplied: ["Vestidos", "Temporada Anterior"],
+        active_contract: false,
+        rating: 3.0
+    }
+]);
